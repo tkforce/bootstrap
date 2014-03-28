@@ -269,7 +269,25 @@ window.onload = function () { // wait for load in a dumb way because B-0
     return result
   }
 
-  function generateJavascript(preamble) {
+  function uglify(js) {
+    var uglifyJS = window.UglifyJS
+    var ast = uglifyJS.parse(js)
+    ast.figure_out_scope()
+
+    var compressor = uglifyJS.Compressor()
+    var compressedAst = ast.transform(compressor)
+
+    compressedAst.figure_out_scope()
+    compressedAst.compute_char_frequency()
+    compressedAst.mangle_names()
+
+    var stream = uglifyJS.OutputStream()
+    compressedAst.print(stream)
+
+    return stream.toString()
+  }
+
+  function generateJS(preamble) {
     var $checked = $('#plugin-section input:checked')
     if (!$checked.length) return false
 
@@ -345,7 +363,7 @@ window.onload = function () { // wait for load in a dumb way because B-0
         ' * Config saved to config.json and ' + gistUrl + '\n' +
         ' */\n'
 
-      generateZip(generateCSS(preamble), generateJavascript(preamble), generateFonts(), configJson, function (blob) {
+      generateZip(generateCSS(preamble), generateJS(preamble), generateFonts(), configJson, function (blob) {
         $compileBtn.removeAttr('disabled')
         saveAs(blob, 'bootstrap.zip')
       })
